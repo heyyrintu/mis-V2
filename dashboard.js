@@ -43,12 +43,38 @@ class MISDashboard {
             ludhiana: /\b(PB[0-9]+)/i
         };
         
+        // Transporter mapping for FTL/PTL classification
+        this.transporterMapping = {
+            FTL: [
+                "Loadit Supply Services Pvt Ltd",
+                "SR ENTERPRISES", 
+                "Surya Freight Carrier",
+                "Self Pick Up",
+                "Loadit"
+            ],
+            PTL: [
+                "SKYLARK EXPRESS (DELHI) PVT LTD",
+                "DTDC EXPRESS LIMITED",
+                "Safexpress Private Limited", 
+                "V TRANS (INDIA) LIMITED",
+                "DTDC Biker",
+                "Safexpress",
+                "DTDC",
+                "Only Invoicing",
+                "Skylark",
+                "Self",
+                "Safe Xpress",
+                "V-Trans"
+            ]
+        };
+        
         // Initialize warehouse filter data
         this.locations = [];
         this.areaCodes = {};
         this.warehouses = {};
         
         this.initializeUI();
+        this.initializeOrderView();
         this.initializeEventListeners();
     }
     
@@ -94,6 +120,10 @@ class MISDashboard {
                             <div class="metric-value" id="totalSOQty">0</div>
                         </div>
                         <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="totalSONumbers">0</div>
+                        </div>
+                        <div class="metric">
                             <div class="metric-label">Total Invoices</div>
                             <div class="metric-value" id="totalInvoices">0</div>
                         </div>
@@ -126,6 +156,10 @@ class MISDashboard {
                         <div class="metric">
                             <div class="metric-label">Sales Order Qty</div>
                             <div class="metric-value" id="b2cSOQty">0</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="b2cSONumbers">0</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Total Invoices</div>
@@ -162,6 +196,10 @@ class MISDashboard {
                             <div class="metric-value" id="ecomSOQty">0</div>
                         </div>
                         <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="ecomSONumbers">0</div>
+                        </div>
+                        <div class="metric">
                             <div class="metric-label">Total Invoices</div>
                             <div class="metric-value" id="ecomInvoices">0</div>
                         </div>
@@ -194,6 +232,10 @@ class MISDashboard {
                         <div class="metric">
                             <div class="metric-label">Sales Order Qty</div>
                             <div class="metric-value" id="offlineSOQty">0</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="offlineSONumbers">0</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Total Invoices</div>
@@ -230,6 +272,10 @@ class MISDashboard {
                             <div class="metric-value" id="quickcomSOQty">0</div>
                         </div>
                         <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="quickcomSONumbers">0</div>
+                        </div>
+                        <div class="metric">
                             <div class="metric-label">Total Invoices</div>
                             <div class="metric-value" id="quickcomInvoices">0</div>
                         </div>
@@ -264,6 +310,10 @@ class MISDashboard {
                             <div class="metric-value" id="eboSOQty">0</div>
                         </div>
                         <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="eboSONumbers">0</div>
+                        </div>
+                        <div class="metric">
                             <div class="metric-label">Total Invoices</div>
                             <div class="metric-value" id="eboInvoices">0</div>
                         </div>
@@ -296,6 +346,10 @@ class MISDashboard {
                         <div class="metric">
                             <div class="metric-label">Sales Order Qty</div>
                             <div class="metric-value" id="othersSOQty">0</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">SO Numbers</div>
+                            <div class="metric-value" id="othersSONumbers">0</div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">Total Invoices</div>
@@ -665,22 +719,36 @@ class MISDashboard {
         
         // Update UI
         this.updateAllCardStats(stats);
+        
+        // Update ORDER VIEW dashboard
+        this.updateOrderView(filteredData);
     }
     
     // Optimized single-pass calculation
     calculateStatsOptimized(data) {
         const stats = {
-            total: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
-            b2c: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
-            ecom: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
-            offline: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
-            quickcom: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
-            ebo: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
-            others: { invoices: 0, quantity: 0, soQty: 0, qtyDiff: 0, cbm: 0, lrPending: 0 }
+            total: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
+            b2c: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
+            ecom: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
+            offline: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
+            quickcom: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
+            ebo: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
+            others: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 }
         };
         
         // Track unique invoices for each category
         const uniqueInvoices = {
+            total: new Set(),
+            b2c: new Set(),
+            ecom: new Set(),
+            offline: new Set(),
+            quickcom: new Set(),
+            ebo: new Set(),
+            others: new Set()
+        };
+        
+        // Track unique SO numbers for each category
+        const uniqueSONumbers = {
             total: new Set(),
             b2c: new Set(),
             ecom: new Set(),
@@ -717,6 +785,7 @@ class MISDashboard {
             
             // Calculate values once
             const invoiceNo = row['SALES Invoice NO'] || row['DELIVERY Note NO'];
+            const soNumber = row['Sales Order No'];
             const quantity = this.getQuantity(row);
             const soQty = this.getSalesOrderQty(row);
             const qtyDiff = this.getQtyDifference(row);
@@ -727,9 +796,14 @@ class MISDashboard {
             // Update stats for total and specific category
             [stats.total, stats[category]].forEach((statObj, index) => {
                 const invoiceSet = index === 0 ? uniqueInvoices.total : uniqueInvoices[category];
+                const soNumberSet = index === 0 ? uniqueSONumbers.total : uniqueSONumbers[category];
                 
                 if (invoiceNo && invoiceNo.toString().trim() !== '') {
                     invoiceSet.add(invoiceNo.toString().trim());
+                }
+                
+                if (soNumber && soNumber.toString().trim() !== '') {
+                    soNumberSet.add(soNumber.toString().trim());
                 }
                 
                 statObj.quantity += quantity;
@@ -749,6 +823,11 @@ class MISDashboard {
             stats[category].invoices = uniqueInvoices[category].size;
         }
         
+        // Set SO Numbers counts from unique sets
+        for (const category in uniqueSONumbers) {
+            stats[category].soNumbers = uniqueSONumbers[category].size;
+        }
+        
         // Format CBM values
         Object.values(stats).forEach(stat => {
             stat.cbm = stat.cbm.toFixed(2);
@@ -756,6 +835,378 @@ class MISDashboard {
         
         return stats;
     }
+    
+    // Initialize ORDER VIEW Dashboard
+    initializeOrderView() {
+        const orderViewDiv = document.getElementById('orderViewSection');
+        if (!orderViewDiv) {
+            console.error("Order View section not found");
+            return;
+        }
+        
+        orderViewDiv.innerHTML = `
+            <div class="dashboard-grid">
+                <!-- Total Card -->
+                <div class="dashboard-card total-card">
+                    <div class="card-header">
+                        <h3>📊 Total</h3>
+                        <div class="card-icon">🎯</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="totalFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="totalFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="totalPtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="totalPtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- B2C Card -->
+                <div class="dashboard-card b2c-card">
+                    <div class="card-header">
+                        <h3>🛍️ B2C</h3>
+                        <div class="card-icon">🛒</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="b2cFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="b2cFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="b2cPtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="b2cPtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- E-commerce Card -->
+                <div class="dashboard-card ecom-card">
+                    <div class="card-header">
+                        <h3>🛒 E-commerce</h3>
+                        <div class="card-icon">📱</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="ecomFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="ecomFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="ecomPtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="ecomPtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Offline Card -->
+                <div class="dashboard-card offline-card">
+                    <div class="card-header">
+                        <h3>🏪 Offline</h3>
+                        <div class="card-icon">🏬</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="offlineFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="offlineFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="offlinePtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="offlinePtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Commerce Card -->
+                <div class="dashboard-card quickcom-card">
+                    <div class="card-header">
+                        <h3>⚡ Quick Commerce</h3>
+                        <div class="card-icon">🏃‍♂️</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="quickcomFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="quickcomFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="quickcomPtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="quickcomPtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- EBO Card -->
+                <div class="dashboard-card ebo-card">
+                    <div class="card-header">
+                        <h3>🏢 EBO</h3>
+                        <div class="card-icon">🏬</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="eboFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="eboFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="eboPtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="eboPtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Others Card -->
+                <div class="dashboard-card others-card">
+                    <div class="card-header">
+                        <h3>📋 Others</h3>
+                        <div class="card-icon">📝</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="transport-section">
+                            <div class="transport-type ftl">
+                                <h4>🚛 FTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="othersFtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="othersFtlSOQty">0</div>
+                                </div>
+                            </div>
+                            <div class="transport-type ptl">
+                                <h4>📦 PTL</h4>
+                                <div class="metric">
+                                    <div class="metric-label">SO Numbers</div>
+                                    <div class="metric-value" id="othersPtlSONumbers">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">SO Qty</div>
+                                    <div class="metric-value" id="othersPtlSOQty">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Calculate ORDER VIEW statistics
+    calculateOrderViewStats(data) {
+        const orderStats = {
+            total: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
+            b2c: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
+            ecom: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
+            offline: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
+            quickcom: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
+            ebo: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
+            others: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } }
+        };
+        
+        // Track unique SO numbers for each category and transport type
+        const uniqueSONumbers = {
+            total: { ftl: new Set(), ptl: new Set() },
+            b2c: { ftl: new Set(), ptl: new Set() },
+            ecom: { ftl: new Set(), ptl: new Set() },
+            offline: { ftl: new Set(), ptl: new Set() },
+            quickcom: { ftl: new Set(), ptl: new Set() },
+            ebo: { ftl: new Set(), ptl: new Set() },
+            others: { ftl: new Set(), ptl: new Set() }
+        };
+        
+        // Define the customer groups for each category
+        const categoryGroups = {
+            b2c: ['decathlon', 'flflipkart(b2c)', 'snapmint', 'shopify', 'tatacliq', 'amazon b2c', 'pepperfry'],
+            ecom: ['amazon', 'flipkart'],
+            offline: ['offline sales-b2b', 'offline – gt', 'offline - mt'],
+            quickcom: ['blinkit', 'swiggy', 'bigbasket', 'zepto'],
+            ebo: ['store 2-lucknow', 'store3-zirakpur'],
+            others: ['sales to vendor', 'internal company', 'others']
+        };
+        
+        // Single pass through data
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const customerGroup = (row['Customer Group'] || '').toLowerCase();
+            
+            // Determine category based on customer group
+            let category = 'others'; // Default category
+            
+            for (const [cat, groups] of Object.entries(categoryGroups)) {
+                if (groups.some(group => customerGroup.includes(group))) {
+                    category = cat;
+                    break;
+                }
+            }
+            
+            // Get transport type
+            const transportType = this.getTransportType(row).toLowerCase();
+            if (transportType !== 'ftl' && transportType !== 'ptl') {
+                continue; // Skip unknown transport types
+            }
+            
+            // Calculate values
+            const soNumber = row['Sales Order No'];
+            const soQty = this.getSalesOrderQty(row);
+            
+            // Update stats for total and specific category
+            [orderStats.total, orderStats[category]].forEach((statObj, index) => {
+                const soNumberSet = index === 0 ? uniqueSONumbers.total[transportType] : uniqueSONumbers[category][transportType];
+                
+                if (soNumber && soNumber.toString().trim() !== '') {
+                    soNumberSet.add(soNumber.toString().trim());
+                }
+                
+                statObj[transportType].soQty += soQty;
+            });
+        }
+        
+        // Set SO Numbers counts from unique sets
+        for (const category in uniqueSONumbers) {
+            for (const transportType of ['ftl', 'ptl']) {
+                orderStats[category][transportType].soNumbers = uniqueSONumbers[category][transportType].size;
+            }
+        }
+        
+        return orderStats;
+    }
+    
+    // Update ORDER VIEW dashboard
+    updateOrderView(data) {
+        if (!data || !Array.isArray(data)) return;
+        
+        const orderStats = this.calculateOrderViewStats(data);
+        this.updateOrderViewCards(orderStats);
+    }
+    
+    // Update ORDER VIEW card displays
+    updateOrderViewCards(orderStats) {
+        const categories = ['total', 'b2c', 'ecom', 'offline', 'quickcom', 'ebo', 'others'];
+        const transportTypes = ['ftl', 'ptl'];
+        
+        // Helper function to animate value update
+        const animateValueUpdate = (element, newValue) => {
+            if (!element) return;
+            element.textContent = newValue;
+            element.style.animation = 'valueChange 0.7s ease-in-out';
+            element.addEventListener('animationend', () => {
+                element.style.animation = '';
+            }, { once: true });
+        };
+        
+        categories.forEach(category => {
+            transportTypes.forEach(transportType => {
+                const soNumbersElement = document.getElementById(`${category}${transportType.charAt(0).toUpperCase() + transportType.slice(1)}SONumbers`);
+                const soQtyElement = document.getElementById(`${category}${transportType.charAt(0).toUpperCase() + transportType.slice(1)}SOQty`);
+                
+                if (soNumbersElement && orderStats[category] && orderStats[category][transportType]) {
+                    animateValueUpdate(soNumbersElement, orderStats[category][transportType].soNumbers.toLocaleString());
+                }
+                
+                if (soQtyElement && orderStats[category] && orderStats[category][transportType]) {
+                    animateValueUpdate(soQtyElement, orderStats[category][transportType].soQty.toLocaleString());
+                }
+            });
+        });
+    }
+    
+    
     
     // Simple hash function for data change detection
     hashData(data) {
@@ -1103,10 +1554,35 @@ class MISDashboard {
         return Math.max(0, soQty - siQty); // Ensure non-negative result
     }
     
+    // Determine transport type (FTL/PTL) based on transporter
+    getTransportType(row) {
+        const transporter = (row['Transporter'] || '').toString().trim();
+        
+        if (!transporter) return 'Unknown';
+        
+        // Check FTL transporters
+        for (const ftlTransporter of this.transporterMapping.FTL) {
+            if (transporter.toLowerCase().includes(ftlTransporter.toLowerCase())) {
+                return 'FTL';
+            }
+        }
+        
+        // Check PTL transporters  
+        for (const ptlTransporter of this.transporterMapping.PTL) {
+            if (transporter.toLowerCase().includes(ptlTransporter.toLowerCase())) {
+                return 'PTL';
+            }
+        }
+        
+        // If not found in either list, return Unknown
+        return 'Unknown';
+    }
+    
     updateCardStats(cardType, stats) {
         const invoicesElement = document.getElementById(`${cardType}Invoices`);
         const quantityElement = document.getElementById(`${cardType}Quantity`);
         const soQtyElement = document.getElementById(`${cardType}SOQty`);
+        const soNumbersElement = document.getElementById(`${cardType}SONumbers`);
         const qtyDiffElement = document.getElementById(`${cardType}QtyDiff`);
         const cbmElement = document.getElementById(`${cardType}CBM`);
         const lrPendingElement = document.getElementById(`${cardType}LRPending`);
@@ -1126,6 +1602,9 @@ class MISDashboard {
         }
         if (soQtyElement) {
             animateValueUpdate(soQtyElement, stats.soQty ? stats.soQty.toLocaleString() : '0');
+        }
+        if (soNumbersElement) {
+            animateValueUpdate(soNumbersElement, stats.soNumbers ? stats.soNumbers.toLocaleString() : '0');
         }
         if (quantityElement) {
             animateValueUpdate(quantityElement, stats.quantity.toLocaleString());

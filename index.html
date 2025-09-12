@@ -83,115 +83,11 @@
             <h2>Dashboard</h2>
             <div id="dashboardSection"></div>
         </div>
-        
-        <div id="resultsSection" class="results-section" style="display: none;">
-            <h2>Generated Reports</h2>
-            
-            <!-- B2C Report -->
-            <div class="report-container">
-                <div class="report-header">
-                    <h3>B2C Report</h3>
-                    <div class="report-actions">
-                        <span id="b2cCount" class="record-count">0 records</span>
-                        <button class="btn-download" onclick="downloadReport('b2c')">Download</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="b2cTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- E-Commerce Report -->
-            <div class="report-container">
-                <div class="report-header">
-                    <h3>E-Commerce Report</h3>
-                    <div class="report-actions">
-                        <span id="ecomCount" class="record-count">0 records</span>
-                        <button class="btn-download" onclick="downloadReport('ecom')">Download</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="ecomTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Offline Report -->
-            <div class="report-container">
-                <div class="report-header">
-                    <h3>Offline Report</h3>
-                    <div class="report-actions">
-                        <span id="offlineCount" class="record-count">0 records</span>
-                        <button class="btn-download" onclick="downloadReport('offline')">Download</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="offlineTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Quick-Commerce Report -->
-            <div class="report-container">
-                <div class="report-header">
-                    <h3>Quick-Commerce Report</h3>
-                    <div class="report-actions">
-                        <span id="quickcomCount" class="record-count">0 records</span>
-                        <button class="btn-download" onclick="downloadReport('quickcom')">Download</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="quickcomTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- EBO Report -->
-            <div class="report-container">
-                <div class="report-header">
-                    <h3>EBO Report</h3>
-                    <div class="report-actions">
-                        <span id="eboCount" class="record-count">0 records</span>
-                        <button class="btn-download" onclick="downloadReport('ebo')">Download</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="eboTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Others Report -->
-            <div class="report-container">
-                <div class="report-header">
-                    <h3>Others Report</h3>
-                    <div class="report-actions">
-                        <span id="othersCount" class="record-count">0 records</span>
-                        <button class="btn-download" onclick="downloadReport('others')">Download</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table id="othersTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div class="download-all">
-                <button id="downloadAll" class="btn-primary">Download All Reports</button>
-            </div>
+
+        <!-- Order View Dashboard -->
+        <div class="dashboard-section order-view-section">
+            <h2>📦 Order View</h2>
+            <div id="orderViewSection"></div>
         </div>
 
         <!-- LR Missing Dashboard -->
@@ -328,6 +224,116 @@
                         📥 Download LR Missing Report
                     </button>
                 </div>
+            </div>
+        </div>
+        
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <h2>Generated Reports</h2>
+            
+            <!-- B2C Report -->
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>B2C Report</h3>
+                    <div class="report-actions">
+                        <span id="b2cCount" class="record-count">0 records</span>
+                        <button class="btn-download" onclick="downloadReport('b2c')">Download</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="b2cTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- E-Commerce Report -->
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>E-Commerce Report</h3>
+                    <div class="report-actions">
+                        <span id="ecomCount" class="record-count">0 records</span>
+                        <button class="btn-download" onclick="downloadReport('ecom')">Download</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="ecomTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Offline Report -->
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>Offline Report</h3>
+                    <div class="report-actions">
+                        <span id="offlineCount" class="record-count">0 records</span>
+                        <button class="btn-download" onclick="downloadReport('offline')">Download</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="offlineTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Quick-Commerce Report -->
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>Quick-Commerce Report</h3>
+                    <div class="report-actions">
+                        <span id="quickcomCount" class="record-count">0 records</span>
+                        <button class="btn-download" onclick="downloadReport('quickcom')">Download</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="quickcomTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- EBO Report -->
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>EBO Report</h3>
+                    <div class="report-actions">
+                        <span id="eboCount" class="record-count">0 records</span>
+                        <button class="btn-download" onclick="downloadReport('ebo')">Download</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="eboTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Others Report -->
+            <div class="report-container">
+                <div class="report-header">
+                    <h3>Others Report</h3>
+                    <div class="report-actions">
+                        <span id="othersCount" class="record-count">0 records</span>
+                        <button class="btn-download" onclick="downloadReport('others')">Download</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="othersTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="download-all">
+                <button id="downloadAll" class="btn-primary">Download All Reports</button>
             </div>
         </div>
     </div>

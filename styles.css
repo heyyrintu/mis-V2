@@ -1058,6 +1058,165 @@ header p {
     color: #9ca3af;
 }
 
+/* ORDER VIEW Dashboard Styles */
+.order-view-section {
+    margin: 30px 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+}
+
+.order-view-section h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Transport Section Styling */
+.transport-section {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.transport-type {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.transport-type:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.transport-type.ftl {
+    border-left: 5px solid #3b82f6;
+}
+
+.transport-type.ptl {
+    border-left: 5px solid #10b981;
+}
+
+.transport-type h4 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.transport-type.ftl h4 {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.transport-type.ptl h4 {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+}
+
+.transport-type .metric {
+    margin-bottom: 15px;
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+}
+
+.transport-type .metric:hover {
+    background: rgba(248, 250, 252, 1);
+    border-color: rgba(148, 163, 184, 0.3);
+    transform: translateY(-2px);
+}
+
+.transport-type .metric:last-child {
+    margin-bottom: 0;
+}
+
+.transport-type .metric-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.transport-type .metric-value {
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.transport-type.ftl .metric-value {
+    color: #1d4ed8;
+}
+
+.transport-type.ptl .metric-value {
+    color: #047857;
+}
+
+/* ORDER VIEW Card Adjustments */
+.order-view-section .dashboard-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.order-view-section .dashboard-card .card-header h3 {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.order-view-section .dashboard-card .card-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Responsive Design for Transport Sections */
+@media (max-width: 768px) {
+    .transport-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .transport-type {
+        padding: 15px;
+    }
+    
+    .transport-type h4 {
+        font-size: 1rem;
+    }
+    
+    .transport-type .metric-value {
+        font-size: 1.1rem;
+    }
+    
+    .order-view-section {
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .order-view-section h2 {
+        font-size: 1.8rem;
+    }
+}
+
 /* Dashboard Table */
 .dashboard-table {
     background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
