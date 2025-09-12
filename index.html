@@ -35,15 +35,44 @@
                 <p><strong>Filename:</strong> <span id="fileName"></span></p>
                 <p><strong>Size:</strong> <span id="fileSize"></span></p>
                 <p><strong>Records:</strong> <span id="recordCount"></span></p>
+                
+                <!-- Load Data Button -->
+                <div class="load-section">
+                    <button id="loadDataBtn" class="btn-load">Load Data</button>
+                    <span id="loadStatus" class="load-status"></span>
+                </div>
             </div>
             
             <div id="generationSection" class="generation-actions" style="display: none;">
                 <div class="sort-controls">
-                    <label for="sortOrder">Sort by SO Date:</label>
-                    <select id="sortOrder">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                    </select>
+                    <div class="sort-group warehouse-sort-group">
+                        <label for="locationFilter">Location:</label>
+                        <select id="locationFilter" class="filter-dropdown">
+                            <option value="all">All Locations</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="sort-group warehouse-sort-group">
+                        <label for="areaCodeFilter">Area Code:</label>
+                        <select id="areaCodeFilter" class="filter-dropdown">
+                            <option value="all">All Area Codes</option>
+                            <!-- Options will be populated dynamically based on location -->
+                        </select>
+                    </div>
+                    <div class="sort-group warehouse-sort-group">
+                        <label for="warehouseFilter">Warehouse:</label>
+                        <select id="warehouseFilter" class="filter-dropdown">
+                            <option value="all">All Warehouses</option>
+                            <!-- Options will be populated dynamically based on area code -->
+                        </select>
+                    </div>
+                    <div class="sort-group">
+                        <label for="sortOrder">Sort by SO Date:</label>
+                        <select id="sortOrder">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
                 </div>
                 <button id="generateReports" class="btn-primary">Generate Reports</button>
             </div>

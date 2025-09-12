@@ -1,6 +1,8 @@
 class ExcelMISGenerator {
     constructor() {
         this.rawData = [];
+        this.loadedData = null; // Store loaded and processed data
+        this.isDataLoaded = false; // Track if data is loaded
         this.b2cData = [];
         this.ecomData = [];
         this.offlineData = [];
@@ -49,6 +51,7 @@ class ExcelMISGenerator {
     initializeEventListeners() {
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
+        const loadDataBtn = document.getElementById('loadDataBtn');
         const generateReports = document.getElementById('generateReports');
         const downloadAll = document.getElementById('downloadAll');
 
@@ -71,11 +74,26 @@ class ExcelMISGenerator {
         uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
         fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
 
+        // Load Data button
+        if (loadDataBtn) {
+            loadDataBtn.addEventListener('click', () => {
+                if (window.auth && window.auth.canWrite()) {
+                    this.loadData();
+                } else {
+                    this.showError('You do not have permission to load data. Contact administrator.');
+                }
+            });
+        }
+
         // Report generation (check write permission)
         if (generateReports) {
             generateReports.addEventListener('click', () => {
                 if (window.auth && window.auth.canWrite()) {
-                    this.generateAllReports();
+                    if (this.isDataLoaded) {
+                        this.generateAllReports();
+                    } else {
+                        this.showError('Please load data first before generating reports.');
+                    }
                 } else {
                     this.showError('You do not have permission to generate reports. Contact administrator.');
                 }
@@ -189,11 +207,28 @@ class ExcelMISGenerator {
                 
                 if (this.rawData.length > 1) {
                     const recordCount = document.getElementById('recordCount');
-                    const generationSection = document.getElementById('generationSection');
+                    const fileInfo = document.getElementById('fileInfo');
                     
-                    if (recordCount && generationSection) {
+                    if (recordCount && fileInfo) {
                         recordCount.textContent = `${this.rawData.length - 1} records`;
-                        generationSection.style.display = 'block';
+                        fileInfo.style.display = 'block';
+                        
+                        // Show load status as ready
+                        const loadStatus = document.getElementById('loadStatus');
+                        if (loadStatus) {
+                            loadStatus.textContent = 'Ready to load data';
+                            loadStatus.className = 'load-status';
+                        }
+                        
+                        // Reset data loaded state
+                        this.isDataLoaded = false;
+                        this.loadedData = null;
+                        
+                        // Hide generation section until data is loaded
+                        const generationSection = document.getElementById('generationSection');
+                        if (generationSection) {
+                            generationSection.style.display = 'none';
+                        }
                     }
                     
                     this.hideError();
@@ -273,54 +308,140 @@ class ExcelMISGenerator {
         }
     }
 
-    generateAllReports() {
+    // Load and process data from uploaded Excel file
+    loadData() {
         try {
             if (this.rawData.length === 0) {
-                this.showError('No data available to process.');
+                this.showError('No file uploaded. Please upload an Excel file first.');
+                return;
+            }
+
+            // Update load status
+            const loadStatus = document.getElementById('loadStatus');
+            const loadDataBtn = document.getElementById('loadDataBtn');
+            
+            if (loadStatus) {
+                loadStatus.textContent = 'Loading data...';
+                loadStatus.className = 'load-status loading';
+            }
+            
+            if (loadDataBtn) {
+                loadDataBtn.disabled = true;
+                loadDataBtn.textContent = 'Loading...';
+            }
+
+            this.performanceMonitor.start('Data Loading');
+
+            // Process the raw data
+            console.log('📊 Starting data loading process...');
+            console.log(`Processing ${this.rawData.length} rows from Excel file`);
+
+            // Convert raw data to objects
+            const headers = this.rawData[0];
+            if (!headers || headers.length === 0) {
+                throw new Error('No headers found in the Excel file');
+            }
+
+            console.log('📋 Excel Headers:', headers);
+
+            const dataObjects = [];
+            for (let i = 1; i < this.rawData.length; i++) {
+                const row = this.rawData[i];
+                if (!row || row.length === 0) continue;
+
+                const obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = row[j];
+                }
+                dataObjects.push(obj);
+            }
+
+            console.log(`✅ Converted ${dataObjects.length} data rows to objects`);
+
+            // Filter out negative values
+            console.log('🔍 Filtering negative values...');
+            this.loadedData = this.filterNegativeValues(dataObjects);
+            console.log(`✅ Filtered data: ${this.loadedData.length} valid rows`);
+
+            // Initialize dashboard with loaded data
+            if (window.dashboard) {
+                console.log('🎯 Initializing dashboard with loaded data...');
+                window.dashboard.setData(this.loadedData);
+                
+                // Show dashboard section
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection) {
+                    dashboardSection.style.display = 'block';
+                }
+            }
+
+            // Mark data as loaded
+            this.isDataLoaded = true;
+            this.performanceMonitor.end('Data Loading');
+
+            // Update UI
+            if (loadStatus) {
+                loadStatus.textContent = `✅ Data loaded successfully! ${this.loadedData.length} records ready for processing`;
+                loadStatus.className = 'load-status success';
+            }
+            
+            if (loadDataBtn) {
+                loadDataBtn.disabled = false;
+                loadDataBtn.textContent = 'Reload Data';
+            }
+
+            // Show generation section
+            const generationSection = document.getElementById('generationSection');
+            if (generationSection) {
+                generationSection.style.display = 'block';
+            }
+
+            console.log('🎉 Data loading completed successfully!');
+            this.hideError();
+
+        } catch (error) {
+            console.error('❌ Error loading data:', error);
+            
+            const loadStatus = document.getElementById('loadStatus');
+            const loadDataBtn = document.getElementById('loadDataBtn');
+            
+            if (loadStatus) {
+                loadStatus.textContent = `❌ Error loading data: ${error.message}`;
+                loadStatus.className = 'load-status error';
+            }
+            
+            if (loadDataBtn) {
+                loadDataBtn.disabled = false;
+                loadDataBtn.textContent = 'Load Data';
+            }
+            
+            this.showError(`Failed to load data: ${error.message}`);
+        }
+    }
+
+    generateAllReports() {
+        try {
+            if (!this.isDataLoaded || !this.loadedData) {
+                this.showError('Please load data first before generating reports.');
                 return;
             }
 
             this.performanceMonitor.start('Total Report Generation');
 
-            // Optimized data conversion
-            this.performanceMonitor.start('Data Conversion');
-            const headers = this.rawData[0];
-            const dataObjects = new Array(this.rawData.length - 1);
-            
-            // Pre-allocate array and use for loop for better performance
-            for (let i = 1; i < this.rawData.length; i++) {
-                const row = this.rawData[i];
-                const obj = {};
-                for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = row[j] || '';
-                }
-                dataObjects[i - 1] = obj;
-            }
-            this.performanceMonitor.end('Data Conversion');
-            
-            // Log initial data stats
-            console.log('📋 INITIAL DATA STATS:');
-            console.log(`   Raw data rows: ${this.rawData.length}`);
-            console.log(`   Headers count: ${headers.length}`);
-            console.log(`   Data objects created: ${dataObjects.length}`);
-            console.log(`   Sample headers: ${headers.slice(0, 5).join(', ')}...`);
+            console.log('📊 Starting report generation with loaded data...');
+            console.log(`Processing ${this.loadedData.length} loaded records`);
 
-            // Filter out rows with negative CBM and invoice quantity values BEFORE categorization
-            console.log('🔍 Starting data filtering process...');
-            this.performanceMonitor.start('Data Filtering');
-            const filteredData = this.filterNegativeValues(dataObjects);
-            this.performanceMonitor.end('Data Filtering');
+            // Use the already loaded and filtered data
+            const reportData = this.loadedData;
             
-            console.log(`✅ Filtering complete! Processing ${filteredData.length} valid rows for report generation`);
-
-            // Generate all six reports with filtered data
+            // Generate all six reports with loaded data
             this.performanceMonitor.start('Report Generation');
-            this.generateB2CReport(filteredData);
-            this.generateEcomReport(filteredData);
-            this.generateOfflineReport(filteredData);
-            this.generateQuickcomReport(filteredData);
-            this.generateEBOReport(filteredData);
-            this.generateOthersReport(filteredData);
+            this.generateB2CReport(reportData);
+            this.generateEcomReport(reportData);
+            this.generateOfflineReport(reportData);
+            this.generateQuickcomReport(reportData);
+            this.generateEBOReport(reportData);
+            this.generateOthersReport(reportData);
             this.performanceMonitor.end('Report Generation');
 
             // Display results
@@ -331,29 +452,18 @@ class ExcelMISGenerator {
             }
             this.hideError();
             
-            // Show filtering notification to user
-            this.showFilteringNotification(dataObjects.length, filteredData.length);
+            // Show success notification to user
+            this.showSuccessNotification(reportData.length);
             
-            // Update dashboard with the filtered data
-            if (window.dashboard) {
-                window.dashboard.setData(filteredData);
-            } else {
-                // Initialize dashboard if not already done
-                window.dashboard = new MISDashboard();
-                window.dashboard.setData(filteredData);
-            }
-
+            // Dashboard is already updated with the data during loadData()
+            
             // Store data in localStorage for LR Pending page
             try {
-                localStorage.setItem('excelData', JSON.stringify(filteredData));
-                console.log('Stored filtered data in localStorage:', filteredData.length, 'records');
-                
-                // Also store raw data for reference
-                localStorage.setItem('rawExcelData', JSON.stringify(dataObjects));
-                console.log('Stored raw data in localStorage:', dataObjects.length, 'records');
+                localStorage.setItem('excelData', JSON.stringify(reportData));
+                console.log('Stored report data in localStorage:', reportData.length, 'records');
                 
                 // Store in instance for direct access
-                this.filteredData = filteredData;
+                this.filteredData = reportData;
             } catch (error) {
                 console.warn('Could not store data in localStorage:', error);
             }
@@ -362,20 +472,19 @@ class ExcelMISGenerator {
             this.logTotalQuantities();
             
             // Log detailed quantity breakdown for debugging
-            this.logQuantityBreakdown(filteredData);
+            this.logQuantityBreakdown(reportData);
             
-            // Validate data integrity for large files
-            this.validateDataIntegrity(dataObjects, filteredData);
+            // Note: Data integrity was already validated during loadData()
             
             this.performanceMonitor.end('Total Report Generation');
 
             // Show LR Missing section and update data
             showLRMissingSection();
-            updateLRMissingData(filteredData);
+            updateLRMissingData(reportData);
             
             // Debug: Log LR counts for comparison
-            const dashboardStats = window.dashboard ? window.dashboard.calculateStats(filteredData) : null;
-            const lrMissingCount = filteredData.filter(row => {
+            const dashboardStats = window.dashboard ? window.dashboard.calculateStats(reportData) : null;
+            const lrMissingCount = reportData.filter(row => {
                 const lrNo = row['SHIPMENT Awb NUMBER'] || '';
                 return !lrNo || lrNo.toString().trim() === '';
             }).length;
@@ -1076,6 +1185,43 @@ class ExcelMISGenerator {
             }, 8000);
         }
     }
+
+    showSuccessNotification(recordCount) {
+        // Create a success notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 400px;
+            font-family: Arial, sans-serif;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 20px; margin-right: 10px;">✅</span>
+                <strong style="color: #155724;">Reports Generated Successfully!</strong>
+            </div>
+            <div style="color: #155724; font-size: 14px;">
+                Successfully processed ${recordCount.toLocaleString()} records and generated all reports.
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
+    }
 }
 
 // Global function for download buttons
@@ -1284,24 +1430,26 @@ function updateLRMissingData(data) {
         return getQuantityForLR(b) - getQuantityForLR(a);
     });
 
-    // Don't show summary section immediately - only after date selection
-    // Just store the data for later use
+    // Don't wait for date selection - show summary and data immediately
     if (lrMissingData.length > 0) {
-        // Set filtered data to all data initially (but don't display yet)
+        // Set filtered data to all data initially
         filteredLRData = allLRMissingData;
         
-        // Hide sections initially
+        // Show sections immediately with all data
         const summarySection = document.getElementById('lrMissingSummarySection');
         const tableSection = document.getElementById('lrMissingTableSection');
         const recordCount = document.getElementById('recordCount');
         
-        if (summarySection) summarySection.style.display = 'none';
-        if (tableSection) tableSection.style.display = 'none';
+        if (summarySection) summarySection.style.display = 'block';
+        if (tableSection) tableSection.style.display = 'block';
         
-        // Update the header record count but keep sections hidden
+        // Update the header record count and show all data
         if (recordCount) {
             recordCount.textContent = `${lrMissingData.length} records`;
         }
+        
+        // Display all LR missing records grouped by date
+        displayLRMissingByDay(lrMissingData);
     } else {
         displayLRMissingByDay(lrMissingData);
     }

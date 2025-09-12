@@ -16,6 +16,38 @@ class MISDashboard {
         };
         this.excludedPlatforms = ['flipkart', 'amazon', 'bigbasket', 'blinkit', 'zepto', 'swiggy'];
         
+        // Warehouse location mapping
+        this.warehouseLocationMapping = {
+            // Mumbai warehouses
+            'MH4': 'Mumbai',
+            'MH5': 'Mumbai',
+            // Gurgaon warehouses
+            'HR3': 'Gurgaon',
+            'HR10': 'Gurgaon',
+            'HR11': 'Gurgaon',
+            // Howrah warehouses
+            'WB4': 'Howrah',
+            // Bangalore warehouses
+            'KA3': 'Bangalore',
+            'KA4': 'Bangalore',
+            // Ludhiana warehouses
+            'PB2': 'Ludhiana'
+        };
+        
+        // Add flexible code pattern matching - this will catch variants with different formatting
+        this.warehouseCodePatterns = {
+            mumbai: /\b(MH[0-9]+)/i,
+            gurgaon: /\b(HR[0-9]+)/i,
+            howrah: /\b(WB[0-9]+)/i,
+            bangalore: /\b(KA[0-9]+)/i,
+            ludhiana: /\b(PB[0-9]+)/i
+        };
+        
+        // Initialize warehouse filter data
+        this.locations = [];
+        this.areaCodes = {};
+        this.warehouses = {};
+        
         this.initializeUI();
         this.initializeEventListeners();
     }
@@ -328,6 +360,57 @@ class MISDashboard {
             });
         }
         
+        // Location filter change handler
+        const locationFilter = document.getElementById('locationFilter');
+        if (locationFilter) {
+            locationFilter.addEventListener('change', () => {
+                this.updateAreaCodeFilter();
+                this.applyWarehouseFilters();
+            });
+        }
+        
+        // Area code filter change handler
+        const areaCodeFilter = document.getElementById('areaCodeFilter');
+        if (areaCodeFilter) {
+            areaCodeFilter.addEventListener('change', () => {
+                this.updateWarehouseFilter();
+                this.applyWarehouseFilters();
+            });
+        }
+        
+        // Warehouse filter change handler
+        const warehouseFilter = document.getElementById('warehouseFilter');
+        if (warehouseFilter) {
+            warehouseFilter.addEventListener('change', () => {
+                this.applyWarehouseFilters();
+            });
+        }
+        
+        // Sort order change handler
+        const sortOrderSelect = document.getElementById('sortOrder');
+        if (sortOrderSelect) {
+            sortOrderSelect.addEventListener('change', () => {
+                if (this.processedData && this.processedData.length > 0) {
+                    // Re-apply current filter with new sorting
+                    if (this.currentView === 'date') {
+                        const datePicker = document.getElementById('datePicker');
+                        if (datePicker && datePicker.value) {
+                            this.filterDataByDate(datePicker.value);
+                        } else {
+                            this.updateDashboard(this.processedData);
+                        }
+                    } else if (this.currentView === 'month') {
+                        const monthPicker = document.getElementById('monthPicker');
+                        if (monthPicker && monthPicker.value) {
+                            this.filterDataByMonth(monthPicker.value);
+                        } else {
+                            this.updateDashboard(this.processedData);
+                        }
+                    }
+                }
+            });
+        }
+        
         // Set default dates
         const today = new Date();
         if (datePicker) {
@@ -379,6 +462,106 @@ class MISDashboard {
         }
     }
     
+    // Apply warehouse filters to the data
+    applyWarehouseFilters() {
+        if (!this.processedData || !Array.isArray(this.processedData)) return;
+        
+        // Get filter values
+        const locationFilter = document.getElementById('locationFilter');
+        const areaCodeFilter = document.getElementById('areaCodeFilter');
+        const warehouseFilter = document.getElementById('warehouseFilter');
+        
+        if (!locationFilter || !areaCodeFilter || !warehouseFilter) return;
+        
+        const selectedLocation = locationFilter.value;
+        const selectedAreaCode = areaCodeFilter.value;
+        const selectedWarehouse = warehouseFilter.value;
+        
+        // Apply current view filter (date or month)
+        if (this.currentView === 'date') {
+            const datePicker = document.getElementById('datePicker');
+            if (datePicker && datePicker.value) {
+                this.filterDataByDate(datePicker.value);
+            } else {
+                this.updateDashboardWithWarehouseFilters(this.processedData);
+            }
+        } else if (this.currentView === 'month') {
+            const monthPicker = document.getElementById('monthPicker');
+            if (monthPicker && monthPicker.value) {
+                this.filterDataByMonth(monthPicker.value);
+            } else {
+                this.updateDashboardWithWarehouseFilters(this.processedData);
+            }
+        }
+    }
+    
+    // Apply warehouse filters to data and update dashboard
+    updateDashboardWithWarehouseFilters(data) {
+        if (!data || !Array.isArray(data)) return;
+        
+        // Get filter values
+        const locationFilter = document.getElementById('locationFilter');
+        const areaCodeFilter = document.getElementById('areaCodeFilter');
+        const warehouseFilter = document.getElementById('warehouseFilter');
+        
+        if (!locationFilter || !areaCodeFilter || !warehouseFilter) {
+            // If filters not found, update dashboard with all data
+            this.updateDashboard(data);
+            return;
+        }
+        
+        const selectedLocation = locationFilter.value;
+        const selectedAreaCode = areaCodeFilter.value;
+        const selectedWarehouse = warehouseFilter.value;
+        
+        // Filter data based on selected filters
+        let filteredData = [...data];
+        
+        if (selectedLocation !== 'all') {
+            filteredData = filteredData.filter(row => {
+                if (!row || typeof row !== 'object') return false;
+                
+                const warehouse = row['Set Source Warehouse'] || '';
+                if (!warehouse) return false;
+                
+                const warehouseCode = this.getWarehouseCode(warehouse);
+                const location = this.getWarehouseLocation(warehouseCode);
+                
+                return location === selectedLocation;
+            });
+            
+            if (selectedAreaCode !== 'all') {
+                filteredData = filteredData.filter(row => {
+                    if (!row || typeof row !== 'object') return false;
+                    
+                    const warehouse = row['Set Source Warehouse'] || '';
+                    if (!warehouse) return false;
+                    
+                    // Extract area code
+                    const areaCodeMatch = warehouse.match(/\b([A-Z]{2}\d+)/);
+                    if (!areaCodeMatch) return false;
+                    
+                    return areaCodeMatch[1] === selectedAreaCode;
+                });
+                
+                if (selectedWarehouse !== 'all') {
+                    filteredData = filteredData.filter(row => {
+                        if (!row || typeof row !== 'object') return false;
+                        
+                        const warehouse = row['Set Source Warehouse'] || '';
+                        return warehouse === selectedWarehouse;
+                    });
+                }
+            }
+        }
+        
+        // Sort filtered data by date
+        filteredData = this.sortDataByDate(filteredData);
+        
+        // Update dashboard with filtered data
+        this.updateDashboard(filteredData);
+    }
+    
     setData(data) {
         // Store the raw data
         this.processedData = data;
@@ -388,16 +571,24 @@ class MISDashboard {
             noDataMessage.style.display = 'none';
         }
         
+        // Extract warehouse structure and populate filters
+        this.extractWarehouseStructure(data);
+        this.populateWarehouseFilters();
+        
         // Apply the current filter
         if (this.currentView === 'date') {
             const datePicker = document.getElementById('datePicker');
             if (datePicker && datePicker.value) {
                 this.filterDataByDate(datePicker.value);
+            } else {
+                this.updateDashboardWithWarehouseFilters(this.processedData);
             }
         } else {
             const monthPicker = document.getElementById('monthPicker');
             if (monthPicker && monthPicker.value) {
                 this.filterDataByMonth(monthPicker.value);
+            } else {
+                this.updateDashboardWithWarehouseFilters(this.processedData);
             }
         }
     }
@@ -417,7 +608,7 @@ class MISDashboard {
             return invoiceDate.includes(formattedDate) || deliveryDate.includes(formattedDate);
         });
         
-        this.updateDashboard(filteredData);
+        this.updateDashboardWithWarehouseFilters(filteredData);
     }
     
     filterDataByMonth(monthStr) {
@@ -442,11 +633,20 @@ class MISDashboard {
             return checkDate(invoiceDate) || checkDate(deliveryDate);
         });
         
-        this.updateDashboard(filteredData);
+        this.updateDashboardWithWarehouseFilters(filteredData);
     }
     
     updateDashboard(filteredData) {
         if (!filteredData || !Array.isArray(filteredData)) return;
+        
+        // Extract warehouse structure and populate filters on first data load
+        if (!this.locations || this.locations.length === 0) {
+            this.extractWarehouseStructure(this.processedData);
+            this.populateWarehouseFilters();
+        }
+        
+        // Sort the data by date
+        filteredData = this.sortDataByDate(filteredData);
         
         // Check cache first
         const dataHash = this.hashData(filteredData);
@@ -586,6 +786,79 @@ class MISDashboard {
         this.updateCardStats('quickcom', stats.quickcom);
         this.updateCardStats('ebo', stats.ebo);
         this.updateCardStats('others', stats.others);
+    }
+
+    // Extract warehouse code from warehouse name
+    getWarehouseCode(warehouse) {
+        if (!warehouse) return '';
+        
+        // Look for common patterns like MH4, HR3, etc.
+        const codeMatch = warehouse.match(/\b([A-Z]{2}\d+)/);
+        if (codeMatch && codeMatch[1]) {
+            return codeMatch[1];
+        }
+        
+        return warehouse; // Return original if no code found
+    }
+    
+    // Get location for a warehouse code
+    getWarehouseLocation(warehouseCode) {
+        // Extract the base warehouse code (without suffixes)
+        const baseCode = warehouseCode.match(/^([A-Z]{2}\d+)/);
+        const code = baseCode && baseCode[1] ? baseCode[1] : warehouseCode;
+        
+        return this.warehouseLocationMapping[code] || 'Other';
+    }
+    
+    // Sort data by warehouse and then by date
+    sortDataByWarehouseAndDate(data) {
+        if (!Array.isArray(data) || data.length === 0) {
+            return data;
+        }
+        
+        // Get warehouse sort option
+        const warehouseSortSelect = document.getElementById('warehouseSort');
+        const warehouseSort = warehouseSortSelect ? warehouseSortSelect.value : 'none';
+        
+        // If no warehouse sorting, just sort by date
+        if (warehouseSort === 'none') {
+            return this.sortDataByDate(data);
+        }
+        
+        // Make a copy of the data to avoid modifying original
+        const sortedData = [...data];
+        
+        // First sort by date (this will be secondary sort)
+        this.sortDataByDate(sortedData);
+        
+        // Then sort by warehouse information
+        return sortedData.sort((a, b) => {
+            const warehouseA = a['Set Source Warehouse'] || '';
+            const warehouseB = b['Set Source Warehouse'] || '';
+            
+            if (warehouseSort === 'location') {
+                // Two-level sort: first by location, then by warehouse code
+                const codeA = this.getWarehouseCode(warehouseA);
+                const codeB = this.getWarehouseCode(warehouseB);
+                
+                const locationA = this.getWarehouseLocation(codeA);
+                const locationB = this.getWarehouseLocation(codeB);
+                
+                // First compare locations
+                if (locationA !== locationB) {
+                    return locationA.localeCompare(locationB);
+                }
+                
+                // Then compare warehouse codes
+                return codeA.localeCompare(codeB);
+            } else {
+                // Just sort by warehouse code
+                const codeA = this.getWarehouseCode(warehouseA);
+                const codeB = this.getWarehouseCode(warehouseB);
+                
+                return codeA.localeCompare(codeB);
+            }
+        });
     }
 
     // Sort data by SO Date only
@@ -869,6 +1142,372 @@ class MISDashboard {
         if (lrPendingElement) {
             animateValueUpdate(lrPendingElement, stats.lrPending.toLocaleString());
         }
+    }
+    
+    // Extract warehouse structure information from data
+    extractWarehouseStructure(data) {
+        if (!Array.isArray(data) || data.length === 0) {
+            console.warn("No data or invalid data provided to extractWarehouseStructure");
+            return;
+        }
+        
+        console.log(`Extracting warehouse structure from ${data.length} rows`);
+        
+        const locationSet = new Set();
+        const areaCodeMap = {};
+        const warehouseMap = {};
+        const warehouseValues = new Set();
+        
+        // Find the warehouse column name - try multiple possible naming conventions
+        const possibleWarehouseColumns = [
+            'Set Source Warehouse',
+            'Source Warehouse',
+            'Warehouse',
+            'Set Warehouse',
+            'SourceWarehouse',
+            'Source_Warehouse',
+            'Set_Source_Warehouse',
+            'Warehouse Code'
+        ];
+        
+        // Determine which column name exists in the data
+        let warehouseColumnName = '';
+        if (data.length > 0) {
+            const sampleRow = data[0];
+            for (const colName of possibleWarehouseColumns) {
+                if (colName in sampleRow) {
+                    warehouseColumnName = colName;
+                    console.log(`Found warehouse column: "${warehouseColumnName}"`);
+                    break;
+                }
+            }
+        }
+        
+        if (!warehouseColumnName) {
+            console.warn("No warehouse column found in the data. Available columns:", 
+                data.length > 0 ? Object.keys(data[0]) : "No data rows");
+            
+            // If no specific warehouse column found, try to extract from all columns
+            if (data.length > 0) {
+                // Check all columns in the first few rows for warehouse patterns
+                const sampleRow = data[0];
+                console.log("Searching all columns for warehouse codes...");
+                Object.keys(sampleRow).forEach(column => {
+                    console.log(`Column '${column}': ${sampleRow[column]}`);
+                });
+            }
+        }
+        
+        // First pass: extract unique locations, area codes, and warehouses
+        data.forEach((row, index) => {
+            if (!row || typeof row !== 'object') return;
+            
+            // Debug: Check first 5 rows to understand data structure
+            if (index < 5) {
+                console.log(`Row ${index} keys:`, Object.keys(row));
+            }
+            
+            // Get warehouse value from the identified column or try Set Source Warehouse as default
+            const warehouse = warehouseColumnName ? row[warehouseColumnName] || '' : row['Set Source Warehouse'] || '';
+            
+            // Track all warehouse values for debugging
+            if (warehouse) {
+                warehouseValues.add(warehouse);
+                if (index < 10) {
+                    console.log(`Row ${index} warehouse value:`, warehouse);
+                }
+            }
+            
+            if (!warehouse) return;
+            
+            // Try to extract warehouse code using our different patterns
+            let areaCode = '';
+            let location = '';
+            
+            // Extract area code (e.g., MH4, HR3) from warehouse name
+            const areaCodeMatch = warehouse.match(/\b([A-Z]{2}\d+)/i);
+            
+            if (areaCodeMatch) {
+                areaCode = areaCodeMatch[1].toUpperCase();
+                location = this.warehouseLocationMapping[areaCode] || 'Other';
+                
+                // If still 'Other', try to determine location from code pattern
+                if (location === 'Other') {
+                    if (/^MH/i.test(areaCode)) location = 'Mumbai';
+                    else if (/^HR/i.test(areaCode)) location = 'Gurgaon';
+                    else if (/^WB/i.test(areaCode)) location = 'Howrah';
+                    else if (/^KA/i.test(areaCode)) location = 'Bangalore';
+                    else if (/^PB/i.test(areaCode)) location = 'Ludhiana';
+                }
+                
+                console.log(`Extracted: Warehouse=${warehouse}, Code=${areaCode}, Location=${location}`);
+            } else {
+                console.log(`No area code found in warehouse: "${warehouse}"`);
+                
+                // Try to extract location directly from warehouse name
+                const lowerWarehouse = warehouse.toLowerCase();
+                if (lowerWarehouse.includes('mumbai')) {
+                    location = 'Mumbai';
+                    areaCode = 'MH';
+                } else if (lowerWarehouse.includes('gurgaon')) {
+                    location = 'Gurgaon';
+                    areaCode = 'HR';
+                } else if (lowerWarehouse.includes('howrah')) {
+                    location = 'Howrah';
+                    areaCode = 'WB';
+                } else if (lowerWarehouse.includes('bangalore')) {
+                    location = 'Bangalore';
+                    areaCode = 'KA';
+                } else if (lowerWarehouse.includes('ludhiana')) {
+                    location = 'Ludhiana';
+                    areaCode = 'PB';
+                } else {
+                    location = 'Other';
+                    areaCode = 'XX';
+                }
+            }
+            
+            // Add location
+            locationSet.add(location);
+            
+            // Add area code to location
+            if (!areaCodeMap[location]) {
+                areaCodeMap[location] = new Set();
+            }
+            areaCodeMap[location].add(areaCode);
+            
+            // Add warehouse to area code
+            const key = `${location}:${areaCode}`;
+            if (!warehouseMap[key]) {
+                warehouseMap[key] = new Set();
+            }
+            warehouseMap[key].add(warehouse);
+        });
+        
+        // If we didn't extract any data, add sample data for testing
+        if (locationSet.size === 0) {
+            console.warn("No warehouse data extracted from the Excel file. Adding sample data for testing.");
+            
+            // Add sample data for each location
+            ['Mumbai', 'Gurgaon', 'Bangalore', 'Howrah', 'Ludhiana'].forEach(location => {
+                locationSet.add(location);
+                areaCodeMap[location] = new Set();
+                
+                // Add sample area codes for each location
+                const areaCodes = {
+                    'Mumbai': ['MH4', 'MH5'],
+                    'Gurgaon': ['HR3', 'HR10', 'HR11'],
+                    'Bangalore': ['KA3', 'KA4'],
+                    'Howrah': ['WB4'],
+                    'Ludhiana': ['PB2']
+                };
+                
+                (areaCodes[location] || []).forEach(code => {
+                    areaCodeMap[location].add(code);
+                    const key = `${location}:${code}`;
+                    warehouseMap[key] = new Set([`${code} - LORPL`]);
+                });
+            });
+        }
+        
+        // Convert sets to sorted arrays
+        this.locations = Array.from(locationSet).sort();
+        
+        this.areaCodes = {};
+        Object.keys(areaCodeMap).forEach(location => {
+            this.areaCodes[location] = Array.from(areaCodeMap[location]).sort();
+        });
+        
+        this.warehouses = {};
+        Object.keys(warehouseMap).forEach(key => {
+            this.warehouses[key] = Array.from(warehouseMap[key])
+                .filter(Boolean)
+                .sort();
+        });
+        
+        console.log('🏭 Extracted Warehouse Structure:');
+        console.log('Locations:', this.locations);
+        console.log('Area Codes by Location:', this.areaCodes);
+        console.log('Warehouses by Location/Area:', this.warehouses);
+        
+        // Log the total number of unique warehouse values found
+        console.log(`Total unique warehouse values found: ${warehouseValues.size}`);
+        if (warehouseValues.size > 0) {
+            console.log('Sample warehouse values:', Array.from(warehouseValues).slice(0, 10));
+        }
+    }
+    
+    // Populate dropdown options
+    populateWarehouseFilters() {
+        console.log("Populating warehouse filters with:", {
+            locations: this.locations,
+            areaCodes: this.areaCodes,
+            warehouseCount: Object.keys(this.warehouses).length
+        });
+        
+        // Populate location dropdown
+        const locationFilter = document.getElementById('locationFilter');
+        if (locationFilter) {
+            // Clear existing options except the first one
+            while (locationFilter.options.length > 1) {
+                locationFilter.remove(1);
+            }
+            
+            // Add location options
+            this.locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationFilter.appendChild(option);
+                console.log(`Added location option: ${location}`);
+            });
+        } else {
+            console.warn("Location filter dropdown not found in the DOM");
+        }
+        
+        // Update dependent dropdowns
+        this.updateAreaCodeFilter();
+    }
+    
+    // Update area code dropdown based on selected location
+    updateAreaCodeFilter() {
+        const locationFilter = document.getElementById('locationFilter');
+        const areaCodeFilter = document.getElementById('areaCodeFilter');
+        
+        if (!locationFilter || !areaCodeFilter) return;
+        
+        const selectedLocation = locationFilter.value;
+        
+        // Clear existing options except the first one
+        while (areaCodeFilter.options.length > 1) {
+            areaCodeFilter.remove(1);
+        }
+        
+        // If "All Locations" is selected or no valid location, stop here
+        if (selectedLocation === 'all') {
+            areaCodeFilter.disabled = true;
+            this.updateWarehouseFilter();
+            return;
+        }
+        
+        // Enable the dropdown
+        areaCodeFilter.disabled = false;
+        
+        // Add area code options for the selected location
+        const areaCodes = this.areaCodes[selectedLocation] || [];
+        areaCodes.forEach(areaCode => {
+            const option = document.createElement('option');
+            option.value = areaCode;
+            option.textContent = areaCode;
+            areaCodeFilter.appendChild(option);
+        });
+        
+        // Update warehouse dropdown
+        this.updateWarehouseFilter();
+    }
+    
+    // Update warehouse dropdown based on selected location and area code
+    updateWarehouseFilter() {
+        const locationFilter = document.getElementById('locationFilter');
+        const areaCodeFilter = document.getElementById('areaCodeFilter');
+        const warehouseFilter = document.getElementById('warehouseFilter');
+        
+        if (!locationFilter || !areaCodeFilter || !warehouseFilter) return;
+        
+        const selectedLocation = locationFilter.value;
+        const selectedAreaCode = areaCodeFilter.value;
+        
+        // Clear existing options except the first one
+        while (warehouseFilter.options.length > 1) {
+            warehouseFilter.remove(1);
+        }
+        
+        // If "All Locations" or "All Area Codes" is selected, disable the warehouse dropdown
+        if (selectedLocation === 'all' || selectedAreaCode === 'all') {
+            warehouseFilter.disabled = true;
+            return;
+        }
+        
+        // Enable the dropdown
+        warehouseFilter.disabled = false;
+        
+        // Add warehouse options for the selected location and area code
+        const key = `${selectedLocation}:${selectedAreaCode}`;
+        const warehouses = this.warehouses[key] || [];
+        warehouses.forEach(warehouse => {
+            const option = document.createElement('option');
+            option.value = warehouse;
+            option.textContent = warehouse;
+            warehouseFilter.appendChild(option);
+        });
+    }
+    
+    // Group data by warehouse location and code for display
+    groupWarehouseData(data) {
+        if (!Array.isArray(data) || data.length === 0) {
+            return {};
+        }
+        
+        const warehouseGroups = {};
+        
+        // First pass: group data by location and warehouse code
+        data.forEach(row => {
+            if (!row || typeof row !== 'object') return;
+            
+            const warehouse = row['Set Source Warehouse'] || '';
+            const warehouseCode = this.getWarehouseCode(warehouse);
+            const location = this.getWarehouseLocation(warehouseCode);
+            
+            // Initialize location group if not exists
+            if (!warehouseGroups[location]) {
+                warehouseGroups[location] = {};
+            }
+            
+            // Get the base warehouse code (without suffixes)
+            const baseCode = warehouseCode.match(/^([A-Z]{2}\d+)/);
+            const code = baseCode && baseCode[1] ? baseCode[1] : warehouseCode;
+            
+            // Initialize warehouse code group if not exists
+            if (!warehouseGroups[location][code]) {
+                warehouseGroups[location][code] = {
+                    warehouses: new Set(),
+                    rows: []
+                };
+            }
+            
+            // Add the full warehouse name to the set
+            warehouseGroups[location][code].warehouses.add(warehouse);
+            
+            // Add the row to this warehouse group
+            warehouseGroups[location][code].rows.push(row);
+        });
+        
+        // Convert Sets to arrays for easier display
+        Object.keys(warehouseGroups).forEach(location => {
+            Object.keys(warehouseGroups[location]).forEach(code => {
+                warehouseGroups[location][code].warehouses = Array.from(
+                    warehouseGroups[location][code].warehouses
+                ).filter(Boolean).sort();
+            });
+        });
+        
+        return warehouseGroups;
+    }
+    
+    // Log warehouse grouping information - useful for debugging
+    logWarehouseStructure(data) {
+        const groupedData = this.groupWarehouseData(data);
+        
+        console.log('🏭 Warehouse Structure:');
+        Object.keys(groupedData).sort().forEach(location => {
+            console.log(`Location: ${location}`);
+            
+            Object.keys(groupedData[location]).sort().forEach(code => {
+                console.log(`  Warehouse Code: ${code}`);
+                console.log(`    Warehouses: ${groupedData[location][code].warehouses.join(', ')}`);
+                console.log(`    Row count: ${groupedData[location][code].rows.length}`);
+            });
+        });
     }
 }
 
