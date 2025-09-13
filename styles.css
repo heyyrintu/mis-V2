@@ -29,22 +29,19 @@ header {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
-    position: relative;
+    gap: 20px;  /* Space between logo and text */
 }
 
 .header-text {
-    text-align: center;
-    width: 100%;
+    text-align: left;
+    flex-shrink: 0;  /* Don't expand to fill space */
 }
 
 .logo-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: absolute;
-    left: 0px;  /* Moved further left */
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;  /* Prevent logo from shrinking */
 }
 
 .company-logo {
@@ -69,13 +66,13 @@ header {
 header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    text-align: center;  /* Changed to center */
+    text-align: left;  /* Left-aligned next to logo */
 }
 
 header p {
     font-size: 1.1rem;
     opacity: 0.9;
-    text-align: center;  /* Changed to center */
+    text-align: left;  /* Left-aligned next to logo */
 }
 
 /* Responsive design for mobile devices */
