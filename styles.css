@@ -18,19 +18,97 @@ body {
 }
 
 header {
-    text-align: center;
     margin-bottom: 40px;
     color: white;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+}
+
+.header-text {
+    text-align: center;
+    width: 100%;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 0px;  /* Moved further left */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.company-logo {
+    height: 95px;
+    width: 95px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.company-logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
+    text-align: center;  /* Changed to center */
 }
 
 header p {
     font-size: 1.1rem;
     opacity: 0.9;
+    text-align: center;  /* Changed to center */
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+        justify-content: center;
+    }
+    
+    .header-text {
+        text-align: center;
+    }
+    
+    .logo-container {
+        position: static;
+        left: auto;
+    }
+    
+    .company-logo {
+        height: 70px;
+        width: 70px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+        text-align: center;
+    }
+    
+    header p {
+        text-align: center;
+    }
 }
 
 /* Upload Section */

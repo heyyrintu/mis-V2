@@ -67,7 +67,7 @@
                         </select>
                     </div>
                     <div class="sort-group">
-                        <label for="sortOrder">Sort by SO Date:</label>
+                        <label for="sortOrder">Sort by Date:</label>
                         <select id="sortOrder">
                             <option value="newest">Newest First</option>
                             <option value="oldest">Oldest First</option>
@@ -109,13 +109,20 @@
             <!-- Date Selection Section -->
             <div class="date-selection-section">
                 <div class="control-section">
-                    <div class="control-title">📅 Date Selection</div>
-                    <div class="date-control">
-                        <input type="date" id="lrDatePicker" onchange="filterBySelectedDate()">
-                        <div class="selected-info" id="selectedDateInfo" style="display: none;">
-                            <span id="selectedDateText"></span>
-                            <span class="info-badge" id="selectedDateCount">0 records</span>
+                    <div class="control-title">📅 Date Range Selection</div>
+                    <div class="date-range-control">
+                        <div class="date-input-group">
+                            <label for="lrFromDatePicker">From Date:</label>
+                            <input type="date" id="lrFromDatePicker">
                         </div>
+                        <div class="date-input-group">
+                            <label for="lrToDatePicker">To Date:</label>
+                            <input type="date" id="lrToDatePicker">
+                        </div>
+                    </div>
+                    <div class="selected-info" id="selectedDateInfo" style="display: none;">
+                        <span id="selectedDateText"></span>
+                        <span class="info-badge" id="selectedDateCount">0 records</span>
                     </div>
                 </div>
             </div>
