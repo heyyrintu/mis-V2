@@ -118,16 +118,17 @@
             <!-- Date Selection Section -->
             <div class="date-selection-section">
                 <div class="control-section">
-                    <div class="control-title">📅 Date Range Selection</div>
-                    <div class="date-range-control">
+                    <div class="control-title">📅 Select Date</div>
+                    <div class="single-date-control">
                         <div class="date-input-group">
-                            <label for="lrFromDatePicker">From Date:</label>
-                            <input type="date" id="lrFromDatePicker">
+                            <label for="lrDatePicker">Select Date:</label>
+                            <input type="date" id="lrDatePicker" class="aesthetic-date-input">
                         </div>
-                        <div class="date-input-group">
-                            <label for="lrToDatePicker">To Date:</label>
-                            <input type="date" id="lrToDatePicker">
-                        </div>
+                        <button class="generate-btn" id="generateLRReport" onclick="generateLRMissingReport()">
+                            <span class="btn-icon">⚡</span>
+                            <span class="btn-text">Generate Report</span>
+                            <div class="btn-glow"></div>
+                        </button>
                     </div>
                     <div class="selected-info" id="selectedDateInfo" style="display: none;">
                         <span id="selectedDateText"></span>

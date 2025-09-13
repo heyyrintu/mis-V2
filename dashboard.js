@@ -548,6 +548,39 @@ class MISDashboard {
             }
         }
     }
+
+    // Return current data after applying warehouse/location/area filters WITHOUT updating UI
+    getWarehouseFilteredData(baseData = null) {
+        const data = baseData || this.processedData || [];
+        const locationFilter = document.getElementById('locationFilter');
+        const areaCodeFilter = document.getElementById('areaCodeFilter');
+        const warehouseFilter = document.getElementById('warehouseFilter');
+        if (!locationFilter || !areaCodeFilter || !warehouseFilter) return data;
+        const selectedLocation = locationFilter.value;
+        const selectedAreaCode = areaCodeFilter.value;
+        const selectedWarehouse = warehouseFilter.value;
+        let filtered = [...data];
+        if (selectedLocation !== 'all') {
+            filtered = filtered.filter(row => {
+                const warehouse = row && row['Set Source Warehouse'];
+                if (!warehouse) return false;
+                const code = this.getWarehouseCode(warehouse);
+                return this.getWarehouseLocation(code) === selectedLocation;
+            });
+            if (selectedAreaCode !== 'all') {
+                filtered = filtered.filter(row => {
+                    const warehouse = row && row['Set Source Warehouse'];
+                    if (!warehouse) return false;
+                    const match = warehouse.match(/\b([A-Z]{2}\d+)/);
+                    return match && match[1] === selectedAreaCode;
+                });
+                if (selectedWarehouse !== 'all') {
+                    filtered = filtered.filter(r => (r['Set Source Warehouse'] || '') === selectedWarehouse);
+                }
+            }
+        }
+        return filtered;
+    }
     
     // Apply warehouse filters to data and update dashboard
     updateDashboardWithWarehouseFilters(data) {
@@ -726,6 +759,32 @@ class MISDashboard {
     
     // Optimized single-pass calculation
     calculateStatsOptimized(data) {
+        // Log available columns for debugging
+        if (data && data.length > 0) {
+            console.log("Available columns in data:", Object.keys(data[0]));
+            
+            // Check for possible LR/AWB column names
+            const possibleLRColumns = Object.keys(data[0]).filter(col => 
+                col.toLowerCase().includes('awb') || 
+                col.toLowerCase().includes('lr') || 
+                col.toLowerCase().includes('shipment') ||
+                col.toLowerCase().includes('tracking') ||
+                col.toLowerCase().includes('docket')
+            );
+            console.log("Possible LR/AWB columns found:", possibleLRColumns);
+            
+            // Log first few rows to see LR data
+            console.log("Sample LR data from first 3 rows:");
+            for (let i = 0; i < Math.min(3, data.length); i++) {
+                const row = data[i];
+                console.log(`Row ${i + 1}:`);
+                possibleLRColumns.forEach(col => {
+                    console.log(`  ${col}: "${row[col]}"`);
+                });
+                console.log(`  SHIPMENT Awb NUMBER: "${row['SHIPMENT Awb NUMBER']}"`);
+            }
+        }
+        
         const stats = {
             total: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
             b2c: { invoices: 0, quantity: 0, soQty: 0, soNumbers: 0, qtyDiff: 0, cbm: 0, lrPending: 0 },
@@ -790,8 +849,21 @@ class MISDashboard {
             const soQty = this.getSalesOrderQty(row);
             const qtyDiff = this.getQtyDifference(row);
             const cbm = parseFloat(row['SI Total CBM'] || row['DN Total CBM'] || 0);
-            const lrNo = row['SHIPMENT Awb NUMBER'] || '';
+            
+            // Try multiple possible LR/AWB column names
+            const lrNo = row['SHIPMENT Awb NUMBER'] || 
+                        row['Shipment Awb Number'] || 
+                        row['AWB Number'] || 
+                        row['LR Number'] || 
+                        row['Tracking Number'] || 
+                        row['Docket Number'] || 
+                        '';
             const hasLR = lrNo && lrNo.toString().trim() !== '';
+            
+            // Debug LR information for first few rows
+            if (i < 3) {
+                console.log(`Row ${i + 1} LR info: "${lrNo}" (hasLR: ${hasLR})`);
+            }
             
             // Update stats for total and specific category
             [stats.total, stats[category]].forEach((statObj, index) => {
@@ -1988,6 +2060,262 @@ class MISDashboard {
             });
         });
     }
+
+    // LR Missing Dashboard Functions
+    generateLRMissingReport() {
+        const datePicker = document.getElementById('lrDatePicker');
+        if (!datePicker.value) {
+            alert('Please select a date to generate the LR Missing report.');
+            return;
+        }
+
+        const selectedDate = datePicker.value;
+        
+        if (!this.processedData || this.processedData.length === 0) {
+            alert('No data available. Please upload an Excel file first.');
+            return;
+        }
+        // Start from warehouse-filtered subset
+        const warehouseSubset = this.getWarehouseFilteredData();
+        // Filter data for selected date and missing LR only within current warehouse scope
+        const filteredData = this.filterLRMissingData(selectedDate, warehouseSubset);
+        
+        // Show loading state
+        const generateBtn = document.getElementById('generateLRReport');
+        const originalContent = generateBtn.innerHTML;
+        generateBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Generating...</span>';
+        generateBtn.disabled = true;
+
+        // Simulate processing time for better UX
+        setTimeout(() => {
+            this.displayLRMissingResults(filteredData, selectedDate);
+            
+            // Restore button
+            generateBtn.innerHTML = originalContent;
+            generateBtn.disabled = false;
+        }, 800);
+    }
+
+    filterLRMissingData(selectedDate, sourceData = null) {
+        const targetDate = new Date(selectedDate);
+        const dateString = targetDate.toISOString().split('T')[0];
+        const data = sourceData || this.processedData || [];
+        return data.filter(row => {
+            if (!row || typeof row !== 'object') return false;
+
+            // Check if date matches
+            const invoiceDate = row['SALES Invoice DATE'];
+            const deliveryDate = row['DELIVERY Note DATE'];
+            
+            let rowDate = null;
+            if (invoiceDate) {
+                const parsedDate = new Date(invoiceDate);
+                if (!isNaN(parsedDate.getTime())) {
+                    rowDate = parsedDate.toISOString().split('T')[0];
+                }
+            } else if (deliveryDate) {
+                const parsedDate = new Date(deliveryDate);
+                if (!isNaN(parsedDate.getTime())) {
+                    rowDate = parsedDate.toISOString().split('T')[0];
+                }
+            }
+
+            if (rowDate !== dateString) return false;
+
+            // Check if LR is missing (using same logic as LR pending calculation)
+            const lrNo = row['SHIPMENT Awb NUMBER'] || 
+                        row['Shipment Awb Number'] || 
+                        row['AWB Number'] || 
+                        row['LR Number'] || 
+                        row['Tracking Number'] || 
+                        row['Docket Number'] || 
+                        '';
+            
+            return !lrNo || lrNo.toString().trim() === '';
+        });
+    }
+
+    displayLRMissingResults(data, selectedDate) {
+        // Update selected date info
+        const selectedDateInfo = document.getElementById('selectedDateInfo');
+        const selectedDateText = document.getElementById('selectedDateText');
+        const selectedDateCount = document.getElementById('selectedDateCount');
+        
+        selectedDateText.textContent = `Selected Date: ${new Date(selectedDate).toLocaleDateString()}`;
+        selectedDateCount.textContent = `${data.length} LR Missing records`;
+        selectedDateInfo.style.display = 'flex';
+
+        // Show summary section
+        const summarySection = document.getElementById('lrMissingSummarySection');
+        summarySection.style.display = 'block';
+
+        // Calculate and display stats
+        this.calculateLRMissingStats(data);
+        
+        // Display the records table
+        this.displayLRMissingTable(data);
+    }
+
+    calculateLRMissingStats(data) {
+        const stats = {
+            total: data.length,
+            b2c: 0,
+            ecom: 0,
+            offline: 0,
+            quickcom: 0,
+            ebo: 0,
+            others: 0
+        };
+
+        // Count by category
+        data.forEach(row => {
+            const cat = this.getCategoryForRow(row);
+            stats[cat]++;
+        });
+
+        // Update UI elements matching HTML IDs
+        this.updateElement('totalLRMissingCount', stats.total);
+        this.updateElement('b2cLRMissingCount', stats.b2c);
+        this.updateElement('ecomLRMissingCount', stats.ecom);
+        this.updateElement('offlineLRMissingCount', stats.offline);
+        this.updateElement('quickcomLRMissingCount', stats.quickcom);
+        this.updateElement('eboLRMissingCount', stats.ebo);
+        this.updateElement('othersLRMissingCount', stats.others);
+
+        // Also update filter option counts if present inside select (safe no-op if span inside option unsupported visually)
+        this.updateElement('totalFilterCount', stats.total);
+        this.updateElement('b2cFilterCount', stats.b2c);
+        this.updateElement('ecomFilterCount', stats.ecom);
+        this.updateElement('offlineFilterCount', stats.offline);
+        this.updateElement('quickcomFilterCount', stats.quickcom);
+        this.updateElement('eboFilterCount', stats.ebo);
+        this.updateElement('othersFilterCount', stats.others);
+
+        // Cache last LR missing dataset for filtering
+        this.lastLRMissingData = data;
+
+        // Update option labels to include counts (spans inside option often not displayed)
+        const select = document.getElementById('lrCategoryFilter');
+        if (select) {
+            const labelMap = {
+                all: `All Categories (${stats.total})`,
+                b2c: `B2C (${stats.b2c})`,
+                ecom: `E-commerce (${stats.ecom})`,
+                offline: `Offline (${stats.offline})`,
+                quickcom: `Quick-commerce (${stats.quickcom})`,
+                ebo: `EBO (${stats.ebo})`,
+                others: `Others (${stats.others})`
+            };
+            Array.from(select.options).forEach(opt => {
+                const v = opt.value;
+                if (labelMap[v]) opt.textContent = labelMap[v];
+            });
+        }
+    }
+
+    displayLRMissingTable(data) {
+        const tableSection = document.getElementById('lrMissingTableSection');
+        if (tableSection) tableSection.style.display = 'block';
+
+        const container = document.getElementById('lrMissingByDay');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="no-data">No LR missing records for selected date.</div>';
+            this.updateElement('recordCount', '0 records');
+            return;
+        }
+
+        // Build table
+        const headers = [
+            'Date','Customer Group','Sales Order No','SALES Invoice NO','DELIVERY Note NO','Quantity','SO Qty','CBM','Warehouse','Remarks'
+        ];
+
+        const rowsHtml = data.map(row => {
+            const invoiceDate = row['SALES Invoice DATE'] || row['DELIVERY Note DATE'] || '';
+            const dateDisp = invoiceDate ? new Date(invoiceDate).toLocaleDateString() : '';
+            const qty = this.getQuantity(row);
+            const soQty = this.getSalesOrderQty(row);
+            const cbm = row['SI Total CBM'] || row['DN Total CBM'] || '';
+            const warehouse = row['Set Source Warehouse'] || '';
+            const category = this.getCategoryForRow(row);
+            return `<tr data-category="${category}">
+                <td>${dateDisp}</td>
+                <td>${row['Customer Group'] || ''}</td>
+                <td>${row['Sales Order No'] || ''}</td>
+                <td>${row['SALES Invoice NO'] || ''}</td>
+                <td>${row['DELIVERY Note NO'] || ''}</td>
+                <td class="num">${qty}</td>
+                <td class="num">${soQty}</td>
+                <td class="num">${cbm}</td>
+                <td>${warehouse}</td>
+                <td>LR Missing</td>
+            </tr>`;
+        }).join('');
+
+        container.innerHTML = `<table class="lr-missing-table">
+            <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+        </table>`;
+
+        this.updateElement('recordCount', `${data.length} records`);
+    }
+
+    // Helper to determine category consistent across features
+    getCategoryForRow(row) {
+        const cg = (row['Customer Group'] || '').toLowerCase();
+        if (this.compiledRegex.b2c.test(cg)) return 'b2c';
+        if (this.compiledRegex.ecom.test(cg)) return 'ecom';
+        if (this.compiledRegex.offline.test(cg)) return 'offline';
+        if (this.compiledRegex.quickcom.test(cg)) return 'quickcom';
+        if (this.compiledRegex.ebo.test(cg)) return 'ebo';
+        return 'others';
+    }
+
+    updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
+    }
+}
+
+// Global functions for LR Missing Dashboard
+function generateLRMissingReport() {
+    if (window.dashboard) {
+        window.dashboard.generateLRMissingReport();
+    }
+}
+
+function refreshLRMissing() {
+    if (window.dashboard) {
+        // Reset the form and clear results
+        document.getElementById('lrDatePicker').value = '';
+        document.getElementById('selectedDateInfo').style.display = 'none';
+        document.getElementById('lrMissingSummarySection').style.display = 'none';
+        const tableSection = document.getElementById('lrMissingTableSection');
+        if (tableSection) tableSection.style.display = 'none';
+        const container = document.getElementById('lrMissingByDay');
+        if (container) container.innerHTML = '';
+        
+        // Optionally reload data
+        if (window.dashboard.processedData) {
+            console.log('LR Missing dashboard refreshed');
+        }
+    }
+}
+
+// Category filter for LR missing records
+function filterByCategory() {
+    if (!window.dashboard || !window.dashboard.lastLRMissingData) return;
+    const select = document.getElementById('lrCategoryFilter');
+    if (!select) return;
+    const val = select.value;
+    let data = window.dashboard.lastLRMissingData;
+    if (val !== 'all') {
+        data = data.filter(row => window.dashboard.getCategoryForRow(row) === val);
+    }
+    window.dashboard.displayLRMissingTable(data);
 }
 
 // Initialize the dashboard when DOM is loaded
