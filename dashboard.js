@@ -936,6 +936,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="totalFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="totalFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -946,6 +950,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="totalPtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="totalPtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -970,6 +978,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="b2cFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="b2cFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -980,6 +992,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="b2cPtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="b2cPtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1004,6 +1020,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="ecomFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="ecomFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -1014,6 +1034,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="ecomPtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="ecomPtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1038,6 +1062,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="offlineFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="offlineFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -1048,6 +1076,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="offlinePtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="offlinePtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1072,6 +1104,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="quickcomFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="quickcomFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -1082,6 +1118,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="quickcomPtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="quickcomPtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1106,6 +1146,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="eboFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="eboFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -1116,6 +1160,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="eboPtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="eboPtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1140,6 +1188,10 @@ class MISDashboard {
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="othersFtlSOQty">0</div>
                                 </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="othersFtlManpower">0</div>
+                                </div>
                             </div>
                             <div class="transport-type ptl">
                                 <h4>📦 PTL</h4>
@@ -1150,6 +1202,10 @@ class MISDashboard {
                                 <div class="metric">
                                     <div class="metric-label">SO Qty</div>
                                     <div class="metric-value" id="othersPtlSOQty">0</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Manpower</div>
+                                    <div class="metric-value" id="othersPtlManpower">0</div>
                                 </div>
                             </div>
                         </div>
@@ -1162,13 +1218,13 @@ class MISDashboard {
     // Calculate ORDER VIEW statistics
     calculateOrderViewStats(data) {
         const orderStats = {
-            total: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
-            b2c: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
-            ecom: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
-            offline: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
-            quickcom: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
-            ebo: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } },
-            others: { ftl: { soNumbers: 0, soQty: 0 }, ptl: { soNumbers: 0, soQty: 0 } }
+            total: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } },
+            b2c: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } },
+            ecom: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } },
+            offline: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } },
+            quickcom: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } },
+            ebo: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } },
+            others: { ftl: { soNumbers: 0, soQty: 0, manpower: 0 }, ptl: { soNumbers: 0, soQty: 0, manpower: 0 } }
         };
         
         // Track unique SO numbers for each category and transport type
@@ -1228,6 +1284,14 @@ class MISDashboard {
                 statObj[transportType].soQty += soQty;
             });
         }
+
+        // Derive manpower after accumulating quantities
+        const computeManpower = (qty) => Math.floor((qty || 0) / 1000);
+        Object.values(orderStats).forEach(catObj => {
+            ['ftl','ptl'].forEach(t => {
+                catObj[t].manpower = computeManpower(catObj[t].soQty);
+            });
+        });
         
         // Set SO Numbers counts from unique sets
         for (const category in uniqueSONumbers) {
@@ -1266,6 +1330,7 @@ class MISDashboard {
             transportTypes.forEach(transportType => {
                 const soNumbersElement = document.getElementById(`${category}${transportType.charAt(0).toUpperCase() + transportType.slice(1)}SONumbers`);
                 const soQtyElement = document.getElementById(`${category}${transportType.charAt(0).toUpperCase() + transportType.slice(1)}SOQty`);
+                const manpowerElement = document.getElementById(`${category}${transportType.charAt(0).toUpperCase() + transportType.slice(1)}Manpower`);
                 
                 if (soNumbersElement && orderStats[category] && orderStats[category][transportType]) {
                     animateValueUpdate(soNumbersElement, orderStats[category][transportType].soNumbers.toLocaleString());
@@ -1273,6 +1338,10 @@ class MISDashboard {
                 
                 if (soQtyElement && orderStats[category] && orderStats[category][transportType]) {
                     animateValueUpdate(soQtyElement, orderStats[category][transportType].soQty.toLocaleString());
+                }
+
+                if (manpowerElement && orderStats[category] && orderStats[category][transportType]) {
+                    animateValueUpdate(manpowerElement, orderStats[category][transportType].manpower.toLocaleString());
                 }
             });
         });
